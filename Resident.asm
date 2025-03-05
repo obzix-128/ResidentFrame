@@ -79,7 +79,8 @@ endm
 ;-----------------------------------------------------------------------------------------------------
 
 ;-----------------------------------------------------------------------------------------------------
-; Ожидает нажатия клавиши '1' на нампаде, после чего вызывает функцию рисования рамки
+; При нажатии на клавиатуре клавиши '1' на нампаде, изменяет переменную Active на 1 и сохраняет экран,
+; после нажатия '0' изменяет переменную Active на 0 соответственно и восстанавливает экран
 ; Entry: None
 ; Exit : None
 ; Destr: None
@@ -91,23 +92,27 @@ new09   proc
 
     in al, 60h
 
-    cmp al, 4fh
-    je On
-    cmp al, 52h
-    jne Skip
-    mov ah, byte ptr cs:[Active]
-    cmp ah, 1
-    jne Skip
+    cmp al, 4fh ; Сравнивает со скан кодом '1'
+    je @@On     ; Если совпадает, то включаем прогу
+    cmp al, 52h ; Сравнивает со скан кодом '0'
+    je @@Off    ; Если совпадает, то выключаем прогу, если не совпадает, значит пропускам нажатие
+    jmp @@Skip
 
-    call frameOff
-    mov cs:[Active], 0
-    jmp Skip
+    @@Off:
+        cmp byte ptr cs:[Active], 0
+        je @@Skip           ; Если программа уже выключена пропускаем нажатие
+        mov cs:[Active], 0
+        call recoverDisplay ; Восстанавливаю старые данные на экране
+        jmp @@Skip
 
-    On:
-    mov cs:[Active], 1
-    call frameOn
+    @@On:
+        cmp byte ptr cs:[Active], 0
+        jne @@Skip       ; Если программа уже включена пропускаем нажатие
+        call saveDisplay ; Сохраняю старые данные об экране
+        mov cs:[Active], 1
+        jmp @@Skip
 
-    Skip:
+    @@Skip:
         RET_ALL_REGISTERS
 
         db 0eah
@@ -118,13 +123,38 @@ new09   proc
     endp
 
 ;-----------------------------------------------------------------------------------------------------
+; По переменной Active, узнаёт в каком режиме находится программа (1/0 = вкл/выкл), во включённом
+; состоянии обновляет отображаемые значения регистров
+; Entry: None
+; Exit : None
+; Destr: None
+;-----------------------------------------------------------------------------------------------------
+
+new08   proc
+    SAVE_ALL_REGISTERS
+
+    cmp byte ptr cs:[Active], 0
+    je @@Skip
+
+    LOAD_REGISTERS_BUFFER
+    call frameOn
+
+    @@Skip:
+        RET_ALL_REGISTERS
+
+        db 0eah
+        Old080fs dw 0
+        Old08Seg dw 0
+    endp
+
+;-----------------------------------------------------------------------------------------------------
 ; Стирает рамку с экрана и восстанавливает старый вид.
 ; Entry: None
 ; Exit : None
 ; Destr: bx, cx, dx, ds, es, di, si
 ;-----------------------------------------------------------------------------------------------------
 
-frameOff    proc
+recoverDisplay  proc
     cld                            ; Сбросил флаг направления
     push cs
     pop ds                         ; Так как работаем в tiny, всё лежит в одном сегменте
@@ -163,7 +193,6 @@ frameOff    proc
 frameOn   proc
     cld ; Сбросил флаг направления
 
-    call saveDisplay ; Сохраняю старые данные об экране
     push cs
     pop ds ; Так как работаем в tiny, всё лежит в одном сегменте
 
@@ -373,17 +402,26 @@ main:
     xor ax, ax
     mov es, ax
     mov bx, 09h * 4
+    mov di, 08h * 4
 
     mov ax, es:[bx]
     mov Old090fs, ax
     mov ax, es:[bx + 2]
     mov Old09Seg, ax
 
+    mov ax, es:[di]
+    mov Old080fs, ax
+    mov ax, es:[di + 2]
+    mov Old08Seg, ax
+
     cli
-    mov es:[bx], offset new09
     push cs
     pop ax
+    mov es:[bx], offset new09
     mov es:[bx + 2], ax
+
+    mov es:[di], offset new08
+    mov es:[di + 2], ax
     sti
 
     mov ax, 3100h

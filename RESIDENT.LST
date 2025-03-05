@@ -1,4 +1,4 @@
-Turbo Assembler	 Version 4.1	    03/03/25 14:55:46	    Page 1
+Turbo Assembler	 Version 4.1	    03/05/25 20:01:53	    Page 1
 resident.asm
 
 
@@ -10,7 +10,7 @@ resident.asm
       5
       6
       7	0100			     Start:
-      8	0100  E9 029B			 jmp main
+      8	0100  E9 02DF			 jmp main
       9
      10				     ;-----------------------------------------------------------------------------------------------
      11				     ------
@@ -60,7 +60,7 @@ resident.asm
      55					 push es
      56					 push ds
      57					 push si
-Turbo Assembler	 Version 4.1	    03/03/25 14:55:46	    Page 2
+Turbo Assembler	 Version 4.1	    03/05/25 20:01:53	    Page 2
 resident.asm
 
 
@@ -105,432 +105,512 @@ resident.asm
      95
      96				     ;-----------------------------------------------------------------------------------------------
      97				     ------
-     98				     ; Ожидает нажатия клавиши '1'	на нампаде, после	чего    +
-     99				     вызывает функцию рисования	рамки
-    100				     ; Entry: None
-    101				     ; Exit : None
-    102				     ; Destr: None
-    103				     ;-----------------------------------------------------------------------------------------------
-    104				     ------
-    105
-    106	0226			     new09   proc
-    107					 SAVE_ALL_REGISTERS
-1   108	0226  9C			 pushf
-1   109	0227  06			 push es
-1   110	0228  1E			 push ds
-1   111	0229  56			 push si
-1   112	022A  57			 push di
-1   113	022B  55			 push bp
-1   114	022C  54			 push sp
-Turbo Assembler	 Version 4.1	    03/03/25 14:55:46	    Page 3
+     98				     ; При нажатии на клавиатуре клавиши '1' на нампаде,	    +
+     99				     изменяет переменную Active на 1 и сохраняет экран,
+    100				     ; после нажатия '0' изменяет переменную Active на 0	    +
+    101				     соответственно и восстанавливает экран
+    102				     ; Entry: None
+    103				     ; Exit : None
+    104				     ; Destr: None
+    105				     ;-----------------------------------------------------------------------------------------------
+    106				     ------
+    107
+    108	0226			     new09   proc
+    109					 SAVE_ALL_REGISTERS
+1   110	0226  9C			 pushf
+1   111	0227  06			 push es
+1   112	0228  1E			 push ds
+1   113	0229  56			 push si
+1   114	022A  57			 push di
+Turbo Assembler	 Version 4.1	    03/05/25 20:01:53	    Page 3
 resident.asm
 
 
 
-1   115	022D  16			 push ss
-1   116	022E  50			 push ax
-1   117	022F  53			 push bx
-1   118	0230  51			 push cx
-1   119	0231  52			 push dx
-    120					 LOAD_REGISTERS_BUFFER
-1   121	0232  2E: A3 0206r		 mov word ptr cs:[BUFFER_REGISTERS +  0	* 2], ax
-1   122	0236  2E: 89 1E	0208r		 mov word ptr cs:[BUFFER_REGISTERS +  1	* 2], bx
-1   123	023B  2E: 89 0E	020Ar		 mov word ptr cs:[BUFFER_REGISTERS +  2	* 2], cx
-1   124	0240  2E: 89 16	020Cr		 mov word ptr cs:[BUFFER_REGISTERS +  3	* 2], dx
-    125
-    126	0245  E4 60			 in al,	60h
+1   115	022B  55			 push bp
+1   116	022C  54			 push sp
+1   117	022D  16			 push ss
+1   118	022E  50			 push ax
+1   119	022F  53			 push bx
+1   120	0230  51			 push cx
+1   121	0231  52			 push dx
+    122					 LOAD_REGISTERS_BUFFER
+1   123	0232  2E: A3 0206r		 mov word ptr cs:[BUFFER_REGISTERS +  0	* 2], ax
+1   124	0236  2E: 89 1E	0208r		 mov word ptr cs:[BUFFER_REGISTERS +  1	* 2], bx
+1   125	023B  2E: 89 0E	020Ar		 mov word ptr cs:[BUFFER_REGISTERS +  2	* 2], cx
+1   126	0240  2E: 89 16	020Cr		 mov word ptr cs:[BUFFER_REGISTERS +  3	* 2], dx
     127
-    128	0247  3C 4F			 cmp al, 4fh
-    129	0249  74 1B			 je On
-    130	024B  3C 52			 cmp al, 52h
-    131	024D  75 21			 jne Skip
-    132	024F  2E: 8A 26	0281r		 mov ah, byte ptr cs:[Active]
-    133	0254  80 FC 01			 cmp ah, 1
-    134	0257  75 17			 jne Skip
-    135
-    136	0259  E8 0026			 call frameOff
-    137	025C  2E: C6 06	0281r 00  +	 mov cs:[Active], 0
-    138	      90
-    139	0263  EB 0B 90			 jmp Skip
-    140
-    141	0266				 On:
-    142	0266  2E: C6 06	0281r 01  +	 mov cs:[Active], 1
-    143	      90
-    144	026D  E8 0037			 call frameOn
-    145
-    146	0270				 Skip:
-    147					     RET_ALL_REGISTERS
-1   148	0270  5A			 pop dx
-1   149	0271  59			 pop cx
-1   150	0272  5B			 pop bx
-1   151	0273  58			 pop ax
-1   152	0274  17			 pop ss
-1   153	0275  5C			 pop sp
-1   154	0276  5D			 pop bp
-1   155	0277  5F			 pop di
-1   156	0278  5E			 pop si
-1   157	0279  1F			 pop ds
-1   158	027A  07			 pop es
-1   159	027B  9D			 popf
-    160
-    161	027C  EA			     db	0eah
-    162	027D  0000			     Old090fs dw 0
-    163	027F  0000			     Old09Seg dw 0
-    164
-    165	0281  00			     Active db 0
-    166	0282				 endp
-    167
-    168				     ;-----------------------------------------------------------------------------------------------
-    169				     ------
-    170				     ; Стирает рамку с экрана и восстанавливает старый	    +
-    171				     вид.
-Turbo Assembler	 Version 4.1	    03/03/25 14:55:46	    Page 4
+    128	0245  E4 60			 in al,	60h
+    129
+    130	0247  3C 4F			 cmp al, 4fh ; Сравнивает со скан кодом '1'
+    131	0249  74 1C			 je @@On     ; Если	совпадает, то включаем прогу
+    132	024B  3C 52			 cmp al, 52h ; Сравнивает со скан кодом '0'
+    133	024D  74 03			 je @@Off    ; Если	совпадает, то выключаем прогу,	если    +
+    134				     не совпадает, значит пропускам нажатие
+    135	024F  EB 2B 90			 jmp @@Skip
+    136
+    137	0252				 @@Off:
+    138	0252  2E: 80 3E	028Dr 00	     cmp byte ptr cs:[Active], 0
+    139	0258  74 22			     je	@@Skip		 ; Если программа уже выключена	    +
+    140				     пропускаем нажатие
+    141	025A  2E: C6 06	028Dr 00  +	     mov cs:[Active], 0
+    142	      90
+    143	0261  E8 0065			     call recoverDisplay ; Восстанавливаю	старые данные на	    +
+    144				     экране
+    145	0264  EB 16 90			     jmp @@Skip
+    146
+    147	0267				 @@On:
+    148	0267  2E: 80 3E	028Dr 00	     cmp byte ptr cs:[Active], 0
+    149	026D  75 0D			     jne @@Skip	      ;	Если программа уже включена		    +
+    150				     пропускаем нажатие
+    151	026F  E8 0094			     call saveDisplay ;	Сохраняю старые данные об	экране
+    152	0272  2E: C6 06	028Dr 01  +	     mov cs:[Active], 1
+    153	      90
+    154	0279  EB 01 90			     jmp @@Skip
+    155
+    156	027C				 @@Skip:
+    157					     RET_ALL_REGISTERS
+1   158	027C  5A			 pop dx
+1   159	027D  59			 pop cx
+1   160	027E  5B			 pop bx
+1   161	027F  58			 pop ax
+1   162	0280  17			 pop ss
+1   163	0281  5C			 pop sp
+1   164	0282  5D			 pop bp
+1   165	0283  5F			 pop di
+1   166	0284  5E			 pop si
+1   167	0285  1F			 pop ds
+1   168	0286  07			 pop es
+1   169	0287  9D			 popf
+    170
+    171	0288  EA			     db	0eah
+Turbo Assembler	 Version 4.1	    03/05/25 20:01:53	    Page 4
 resident.asm
 
 
 
-    172				     ; Entry: None
-    173				     ; Exit : None
-    174				     ; Destr: bx, cx, dx, ds, es, di, si
-    175				     ;-----------------------------------------------------------------------------------------------
-    176				     ------
+    172	0289  0000			     Old090fs dw 0
+    173	028B  0000			     Old09Seg dw 0
+    174
+    175	028D  00			     Active db 0
+    176	028E				 endp
     177
-    178	0282			     frameOff	 proc
-    179	0282  FC			 cld				; Сбросил флаг направления
-    180	0283  0E			 push cs
-    181	0284  1F			 pop ds				; Так как	работаем в tiny, всё лежит +
-    182				     в	одном сегменте
-    183	0285  BE 011Cr			 lea si, BUFFER_DISPLAY_SYMBOLS	; Установил в	ds:si адрес массива	    +
-    184				     для хранения данных
-    185
-    186	0288  BB B800			 mov bx, VIDEOSEG
-    187	028B  8E C3			 mov es, bx	    ; Установил адрес сегмента видеопамяти
-    188	028D  BF 0370			 mov di, BIAS_FRAME ; Установил смещение от начала экрана
+    178				     ;-----------------------------------------------------------------------------------------------
+    179				     ------
+    180				     ; По переменной Active, узнаёт в каком режиме находится +
+    181				     программа	(1/0 = вкл/выкл), во включённом
+    182				     ; состоянии обновляет отображаемые значения		    +
+    183				     регистров
+    184				     ; Entry: None
+    185				     ; Exit : None
+    186				     ; Destr: None
+    187				     ;-----------------------------------------------------------------------------------------------
+    188				     ------
     189
-    190	0290  B9 000D			 mov cx, FRAME_WIDTH
-    191	0293  BA 0009			 mov dx, FRAME_HEIGHT ;	Задаю счётчики по вертикали и		    +
-    192				     горизонтали
-    193
-    194	0296				 @@DrawOneLine:
-    195	0296  57			     push di
-    196	0297  51			     push cx
-    197	0298  F3> A5			     rep movsw ; Циклом печатаю строчку из памяти
-    198	029A  59			     pop cx
-    199	029B  5F			     pop di
-    200
-    201	029C  81 C7 00A0		     add di, 80	* 2 ; Передвигаюсь на следующую
-    202
-    203	02A0  4A			     dec dx
-    204	02A1  83 FA 00			     cmp dx, 0 ; Проверяю не пора	ли выйти	из цикла
-    205	02A4  75 F0			     jne @@DrawOneLine
-    206
-    207	02A6  C3			 ret
-    208	02A7				 endp
-    209
-    210				     ;-----------------------------------------------------------------------------------------------
-    211				     ------
-    212				     ; Рисует рамку фиксированного размера со	значением  +
-    213				     регистров	внутри
-    214				     ; Entry: None
-    215				     ; Exit : None
-    216				     ; Destr: bx, cx, dx, ds, es, di, si
-    217				     ;-----------------------------------------------------------------------------------------------
-    218				     ------
-    219
-    220	02A7			     frameOn   proc
-    221	02A7  FC			 cld ; Сбросил флаг направления
-    222
-    223	02A8  E8 0017			 call saveDisplay ; Сохраняю старые данные об экране
-    224	02AB  0E			 push cs
-    225	02AC  1F			 pop ds	; Так как	работаем в tiny, всё лежит в одном	    +
-    226				     сегменте
-    227
-    228	02AD  BE 0113r			 lea si, [RAMKA]      ;	в ds:si положил	адрес строки	с		    +
-Turbo Assembler	 Version 4.1	    03/03/25 14:55:46	    Page 5
+    190	028E			     new08   proc
+    191					 SAVE_ALL_REGISTERS
+1   192	028E  9C			 pushf
+1   193	028F  06			 push es
+1   194	0290  1E			 push ds
+1   195	0291  56			 push si
+1   196	0292  57			 push di
+1   197	0293  55			 push bp
+1   198	0294  54			 push sp
+1   199	0295  16			 push ss
+1   200	0296  50			 push ax
+1   201	0297  53			 push bx
+1   202	0298  51			 push cx
+1   203	0299  52			 push dx
+    204
+    205	029A  2E: 80 3E	028Dr 00	 cmp byte ptr cs:[Active], 0
+    206	02A0  74 16			 je @@Skip
+    207
+    208					 LOAD_REGISTERS_BUFFER
+1   209	02A2  2E: A3 0206r		 mov word ptr cs:[BUFFER_REGISTERS +  0	* 2], ax
+1   210	02A6  2E: 89 1E	0208r		 mov word ptr cs:[BUFFER_REGISTERS +  1	* 2], bx
+1   211	02AB  2E: 89 0E	020Ar		 mov word ptr cs:[BUFFER_REGISTERS +  2	* 2], cx
+1   212	02B0  2E: 89 16	020Cr		 mov word ptr cs:[BUFFER_REGISTERS +  3	* 2], dx
+    213	02B5  E8 0036			 call frameOn
+    214
+    215	02B8				 @@Skip:
+    216					     RET_ALL_REGISTERS
+1   217	02B8  5A			 pop dx
+1   218	02B9  59			 pop cx
+1   219	02BA  5B			 pop bx
+1   220	02BB  58			 pop ax
+1   221	02BC  17			 pop ss
+1   222	02BD  5C			 pop sp
+1   223	02BE  5D			 pop bp
+1   224	02BF  5F			 pop di
+1   225	02C0  5E			 pop si
+1   226	02C1  1F			 pop ds
+1   227	02C2  07			 pop es
+1   228	02C3  9D			 popf
+Turbo Assembler	 Version 4.1	    03/05/25 20:01:53	    Page 5
 resident.asm
 
 
 
-    229				     символами	рамки
-    230	02B0  B9 000D			 mov cx, FRAME_WIDTH  ;	Установил ширину	рамки
-    231	02B3  BA 0009			 mov dx, FRAME_HEIGHT ;	Установил высоту	рамки
-    232	02B6  B4 02			 mov ah, FRAME_COLOR  ;	Установил цвет рамки
-    233	02B8  BF 0370			 mov di, BIAS_FRAME   ;	Установил смещение от начала экрана  +
-    234				     до первого символа	рамки
-    235
-    236	02BB  E8 00AB			 call drawFrame	; Рисую рамку
-    237
-    238	02BE  E8 0025			 call drawTitle	; Рисую надпись
-    239
-    240	02C1  C3			 ret
-    241	02C2				 endp
-    242
-    243				     ;-----------------------------------------------------------------------------------------------
-    244				     ------
-    245				     ; Сохраняет в памяти старый вид экрана
-    246				     ; Entry: None
-    247				     ; Exit : None
-    248				     ; Destr: bx, cx, dx, ds, es, di, si, al
-    249				     ;-----------------------------------------------------------------------------------------------
-    250				     ------
-    251
-    252	02C2			     saveDisplay proc
-    253	02C2  BB B800			 mov bx, VIDEOSEG
-    254	02C5  8E DB			 mov ds, bx	    ; Установил адрес сегмента видеопамяти
-    255	02C7  BE 0370			 mov si, BIAS_FRAME ; Установил смещение от начала экрана
+    229
+    230	02C4  EA			     db	0eah
+    231	02C5  0000			     Old080fs dw 0
+    232	02C7  0000			     Old08Seg dw 0
+    233	02C9				 endp
+    234
+    235				     ;-----------------------------------------------------------------------------------------------
+    236				     ------
+    237				     ; Стирает рамку с экрана и восстанавливает старый	    +
+    238				     вид.
+    239				     ; Entry: None
+    240				     ; Exit : None
+    241				     ; Destr: bx, cx, dx, ds, es, di, si
+    242				     ;-----------------------------------------------------------------------------------------------
+    243				     ------
+    244
+    245	02C9			     recoverDisplay  proc
+    246	02C9  FC			 cld				; Сбросил флаг направления
+    247	02CA  0E			 push cs
+    248	02CB  1F			 pop ds				; Так как	работаем в tiny, всё лежит +
+    249				     в	одном сегменте
+    250	02CC  BE 011Cr			 lea si, BUFFER_DISPLAY_SYMBOLS	; Установил в	ds:si адрес массива	    +
+    251				     для хранения данных
+    252
+    253	02CF  BB B800			 mov bx, VIDEOSEG
+    254	02D2  8E C3			 mov es, bx	    ; Установил адрес сегмента видеопамяти
+    255	02D4  BF 0370			 mov di, BIAS_FRAME ; Установил смещение от начала экрана
     256
-    257	02CA  0E			 push cs
-    258	02CB  07			 pop es
-    259	02CC  BF 011Cr			 lea di, BUFFER_DISPLAY_SYMBOLS	; Установил в	es:di адрес массива	    +
-    260				     для хранения данных
-    261
-    262	02CF  B9 000D			 mov cx, FRAME_WIDTH
-    263	02D2  BA 0009			 mov dx, FRAME_HEIGHT ;	Задаю счётчики по вертикали и		    +
-    264				     горизонтали
-    265
-    266	02D5				 SaveOneLine:
-    267	02D5  56			     push si
-    268	02D6  51			     push cx
-    269	02D7  F3> A5			     rep movsw ; Циклом сохраняю одну	строчку
-    270	02D9  59			     pop cx
-    271	02DA  5E			     pop si
-    272
-    273	02DB  81 C6 00A0		     add si, 80	* 2 ; Передвигаюсь на следующую
-    274
-    275	02DF  4A			     dec dx
-    276	02E0  83 FA 00			     cmp dx, 0 ; Проверяю не пора	ли выйти	из цикла
-    277	02E3  75 F0			     jne SaveOneLine
-    278
-    279	02E5  C3			 ret
-    280	02E6				 endp
-    281
-    282				     ;-----------------------------------------------------------------------------------------------
-    283				     ------
-    284				     ; На рамке фиксированного размера рисует	состояние  +
-    285				     регистров
-Turbo Assembler	 Version 4.1	    03/03/25 14:55:46	    Page 6
+    257	02D7  B9 000D			 mov cx, FRAME_WIDTH
+    258	02DA  BA 0009			 mov dx, FRAME_HEIGHT ;	Задаю счётчики по вертикали и		    +
+    259				     горизонтали
+    260
+    261	02DD				 @@DrawOneLine:
+    262	02DD  57			     push di
+    263	02DE  51			     push cx
+    264	02DF  F3> A5			     rep movsw ; Циклом печатаю строчку из памяти
+    265	02E1  59			     pop cx
+    266	02E2  5F			     pop di
+    267
+    268	02E3  81 C7 00A0		     add di, 80	* 2 ; Передвигаюсь на следующую
+    269
+    270	02E7  4A			     dec dx
+    271	02E8  83 FA 00			     cmp dx, 0 ; Проверяю не пора	ли выйти	из цикла
+    272	02EB  75 F0			     jne @@DrawOneLine
+    273
+    274	02ED  C3			 ret
+    275	02EE				 endp
+    276
+    277				     ;-----------------------------------------------------------------------------------------------
+    278				     ------
+    279				     ; Рисует рамку фиксированного размера со	значением  +
+    280				     регистров	внутри
+    281				     ; Entry: None
+    282				     ; Exit : None
+    283				     ; Destr: bx, cx, dx, ds, es, di, si
+    284				     ;-----------------------------------------------------------------------------------------------
+    285				     ------
+Turbo Assembler	 Version 4.1	    03/05/25 20:01:53	    Page 6
 resident.asm
 
 
 
-    286				     ; Entry: None
-    287				     ; Exit : None
-    288				     ; Destr: es, ds, ax, bx, cx, di, si
-    289				     ;-----------------------------------------------------------------------------------------------
-    290				     ------
-    291
-    292	02E6			     drawTitle	 proc
-    293	02E6  B8 B800			 mov ax, VIDEOSEG
-    294	02E9  8E C0			 mov es, ax		; Устанавливаю адрес сегмента		    +
-    295				     видеопамяти
-    296	02EB  BF 0370			 mov di, BIAS_FRAME
-    297	02EE  81 C7 00A4		 add di, 80 * 2	+ 2 * 2	; Устанавливаю нужное	смещение	    +
-    298				     относительно начала экрана	и на	две строки
-    299								; ниже и два столбца правее края рамки
-    300	02F2  0E			 push cs
-    301	02F3  1F			 pop ds
-    302	02F4  BE 0103r			 lea si, [REGISTERS] ; В ds:si	положил адрес строки с именами    +
-    303				     регистров
-    304
-    305	02F7  BB 023D			 mov bx, 023dh ; В bx положил символ '='
-    306	02FA  B9 0004			 mov cx, NUMBER_OF_REGISTERS
-    307
-    308	02FD				 @@DrawOneReg:		; В цикле	рисую названия регистров на +
-    309				     рамке
-    310	02FD  57			     push di
-    311	02FE  A5			     movsw
-    312	02FF  A5			     movsw		; Нарисовал имя регистра
-    313	0300  83 C7 02			     add di, 1 * 2	; Пропуск
-    314	0303  26: 89 1D			     mov es:[di], bx	; '='
-    315	0306  5F			     pop di
-    316	0307  81 C7 0140		     add di, 2 * 80 * 2	; Перепрыгнул через строку
-    317	030B  E2 F0			     loop @@DrawOneReg
-    318
-    319	030D  B9 0004			 mov cx, NUMBER_OF_REGISTERS
-    320	0310  BF 0370			 mov di, BIAS_FRAME
-    321	0313  81 C7 00AE		 add di, 80 * 2	+ 7 * 2	    ; Устанавливаю нужное смещение	    +
-    322				     относительно начала экрана	и на	две строки
-    323								    ; ниже и семь столбцов правее края   +
-    324				     рамки
-    325	0317  BE 0206r			 lea si, [BUFFER_REGISTERS] ; В ds:si положил адрес строки со	    +
-    326				     значениями регистров
+    286
+    287	02EE			     frameOn   proc
+    288	02EE  FC			 cld ; Сбросил флаг направления
+    289
+    290	02EF  0E			 push cs
+    291	02F0  1F			 pop ds	; Так как	работаем в tiny, всё лежит в одном	    +
+    292				     сегменте
+    293
+    294	02F1  BE 0113r			 lea si, [RAMKA]      ;	в ds:si положил	адрес строки	с		    +
+    295				     символами	рамки
+    296	02F4  B9 000D			 mov cx, FRAME_WIDTH  ;	Установил ширину	рамки
+    297	02F7  BA 0009			 mov dx, FRAME_HEIGHT ;	Установил высоту	рамки
+    298	02FA  B4 02			 mov ah, FRAME_COLOR  ;	Установил цвет рамки
+    299	02FC  BF 0370			 mov di, BIAS_FRAME   ;	Установил смещение от начала экрана  +
+    300				     до первого символа	рамки
+    301
+    302	02FF  E8 00AB			 call drawFrame	; Рисую рамку
+    303
+    304	0302  E8 0025			 call drawTitle	; Рисую надпись
+    305
+    306	0305  C3			 ret
+    307	0306				 endp
+    308
+    309				     ;-----------------------------------------------------------------------------------------------
+    310				     ------
+    311				     ; Сохраняет в памяти старый вид экрана
+    312				     ; Entry: None
+    313				     ; Exit : None
+    314				     ; Destr: bx, cx, dx, ds, es, di, si, al
+    315				     ;-----------------------------------------------------------------------------------------------
+    316				     ------
+    317
+    318	0306			     saveDisplay proc
+    319	0306  BB B800			 mov bx, VIDEOSEG
+    320	0309  8E DB			 mov ds, bx	    ; Установил адрес сегмента видеопамяти
+    321	030B  BE 0370			 mov si, BIAS_FRAME ; Установил смещение от начала экрана
+    322
+    323	030E  0E			 push cs
+    324	030F  07			 pop es
+    325	0310  BF 011Cr			 lea di, BUFFER_DISPLAY_SYMBOLS	; Установил в	es:di адрес массива	    +
+    326				     для хранения данных
     327
-    328	031A				 @@DrawOneValue:
-    329	031A  57			     push di
-    330	031B  51			     push cx
-    331	031C  E8 000C			     call conversionOneNumber
-    332	031F  59			     pop cx
-    333	0320  5F			     pop di
-    334	0321  83 C6 02			     add si, 2		; Перешёл на следующее значение
-    335	0324  81 C7 0140		     add di, 2 * 80 * 2	; Перепрыгнул через строку
-    336	0328  E2 F0			     loop @@DrawOneValue
-    337
-    338	032A  C3			 ret
-    339	032B				 endp
+    328	0313  B9 000D			 mov cx, FRAME_WIDTH
+    329	0316  BA 0009			 mov dx, FRAME_HEIGHT ;	Задаю счётчики по вертикали и		    +
+    330				     горизонтали
+    331
+    332	0319				 SaveOneLine:
+    333	0319  56			     push si
+    334	031A  51			     push cx
+    335	031B  F3> A5			     rep movsw ; Циклом сохраняю одну	строчку
+    336	031D  59			     pop cx
+    337	031E  5E			     pop si
+    338
+    339	031F  81 C6 00A0		     add si, 80	* 2 ; Передвигаюсь на следующую
     340
-    341				     ;-----------------------------------------------------------------------------------------------
-    342				     ------
-Turbo Assembler	 Version 4.1	    03/03/25 14:55:46	    Page 7
+    341	0323  4A			     dec dx
+    342	0324  83 FA 00			     cmp dx, 0 ; Проверяю не пора	ли выйти	из цикла
+Turbo Assembler	 Version 4.1	    03/05/25 20:01:53	    Page 7
 resident.asm
 
 
 
-    343				     ; Конвертирует	значение регистра si в	символы		    +
-    344				     определённого	цвета и записывает по	адресу es:[di]
-    345				     ; Entry: es:[di] -	адрес памяти	куда записать результат
-    346				     ;	      ds:[si] -	значение, которое нужно конвертировать
-    347				     ; Exit : None
-    348				     ; Destr: di, ax, cx
-    349				     ;-----------------------------------------------------------------------------------------------
-    350				     ------
-    351
-    352	032B			     conversionOneNumber proc
-    353	032B  33 C9			 xor cx, cx ; Почистил значения
-    354
-    355	032D				 OneSymbol:
-    356	032D  8B 04			     mov ax, [si] ; Переложил в ax значение для конвертации
-    357	032F  D3 E0			     shl ax, cl
-    358	0331  D1 E8 D1 E8 D1 E8	D1+	     shr ax, 12	  ; Двумя командами оставил только один	    +
-    359	      E8 D1 E8 D1 E8 D1	E8+  байт для конвертации его в ASCII-код
-    360	      D1 E8 D1 E8 D1 E8	D1+
-    361	      E8 D1 E8
-    362	0349  3D 0009			     cmp ax, 9	  ; Сравнил с 9, если меньше или равно, то 0-9, +
-    363				     если больше, то a-f
-    364	034C  76 0A			     jbe DecimalNumber
-    365	034E  77 00			     ja	HexadecimalNumber
-    366
-    367	0350				 HexadecimalNumber:
-    368	0350  04 37			     add al, 'A' - 0ah	 ; Превратил в ASCII-код
-    369	0352  B4 02			     mov ah, FRAME_COLOR ; Указал	нужный цвет
-    370	0354  AB			     stosw		 ; Положил в память
-    371	0355  EB 09 90			     jmp NextSymbol	 ; Прыгаю	на проверку на следующий	    +
-    372				     цикл
+    343	0327  75 F0			     jne SaveOneLine
+    344
+    345	0329  C3			 ret
+    346	032A				 endp
+    347
+    348				     ;-----------------------------------------------------------------------------------------------
+    349				     ------
+    350				     ; На рамке фиксированного размера рисует	состояние  +
+    351				     регистров
+    352				     ; Entry: None
+    353				     ; Exit : None
+    354				     ; Destr: es, ds, ax, bx, cx, di, si
+    355				     ;-----------------------------------------------------------------------------------------------
+    356				     ------
+    357
+    358	032A			     drawTitle	 proc
+    359	032A  B8 B800			 mov ax, VIDEOSEG
+    360	032D  8E C0			 mov es, ax		; Устанавливаю адрес сегмента		    +
+    361				     видеопамяти
+    362	032F  BF 0370			 mov di, BIAS_FRAME
+    363	0332  81 C7 00A4		 add di, 80 * 2	+ 2 * 2	; Устанавливаю нужное	смещение	    +
+    364				     относительно начала экрана	и на	две строки
+    365								; ниже и два столбца правее края рамки
+    366	0336  0E			 push cs
+    367	0337  1F			 pop ds
+    368	0338  BE 0103r			 lea si, [REGISTERS] ; В ds:si	положил адрес строки с именами    +
+    369				     регистров
+    370
+    371	033B  BB 023D			 mov bx, 023dh ; В bx положил символ '='
+    372	033E  B9 0004			 mov cx, NUMBER_OF_REGISTERS
     373
-    374	0358				 DecimalNumber:
-    375	0358  04 30			     add al, '0'	 ; Превратил в ASCII-код
-    376	035A  B4 02			     mov ah, FRAME_COLOR ; Указал	нужный цвет
-    377	035C  AB			     stosw		 ; Положил в память
-    378	035D  EB 01 90			     jmp NextSymbol	 ; Прыгаю	на проверку на следующий	    +
-    379				     цикл
-    380
-    381	0360				 NextSymbol:
-    382	0360  80 C1 04			     add cl, 4	; Увеличиваю счётчик
-    383	0363  80 F9 10			     cmp cl, 16	; Проверяю условие выхода
-    384	0366  75 C5			     jne OneSymbol
-    385
-    386	0368  C3			 ret
-    387	0369				 endp
-    388
-    389				     ;-----------------------------------------------------------------------------------------------
-    390				     ------
-    391				     ; Рисует рамку фиксированного размера и цвета
-    392				     ; Entry: ds:si - адрес строки с символами рамки
-    393				     ;		 cx - ширина рамки
-    394				     ;		 dx - высота рамки
-    395				     ;		 ah - цвет рамки
-    396				     ;		 di - смещение до первого символа рамки
-    397				     ; Exit : None
-    398				     ; Destr: al, bx, si, es, di, dx
-    399				     ;-----------------------------------------------------------------------------------------------
-Turbo Assembler	 Version 4.1	    03/03/25 14:55:46	    Page 8
+    374	0341				 @@DrawOneReg:		; В цикле	рисую названия регистров на +
+    375				     рамке
+    376	0341  57			     push di
+    377	0342  A5			     movsw
+    378	0343  A5			     movsw		; Нарисовал имя регистра
+    379	0344  83 C7 02			     add di, 1 * 2	; Пропуск
+    380	0347  26: 89 1D			     mov es:[di], bx	; '='
+    381	034A  5F			     pop di
+    382	034B  81 C7 0140		     add di, 2 * 80 * 2	; Перепрыгнул через строку
+    383	034F  E2 F0			     loop @@DrawOneReg
+    384
+    385	0351  B9 0004			 mov cx, NUMBER_OF_REGISTERS
+    386	0354  BF 0370			 mov di, BIAS_FRAME
+    387	0357  81 C7 00AE		 add di, 80 * 2	+ 7 * 2	    ; Устанавливаю нужное смещение	    +
+    388				     относительно начала экрана	и на	две строки
+    389								    ; ниже и семь столбцов правее края   +
+    390				     рамки
+    391	035B  BE 0206r			 lea si, [BUFFER_REGISTERS] ; В ds:si положил адрес строки со	    +
+    392				     значениями регистров
+    393
+    394	035E				 @@DrawOneValue:
+    395	035E  57			     push di
+    396	035F  51			     push cx
+    397	0360  E8 000C			     call conversionOneNumber
+    398	0363  59			     pop cx
+    399	0364  5F			     pop di
+Turbo Assembler	 Version 4.1	    03/05/25 20:01:53	    Page 8
 resident.asm
 
 
 
-    400				     ------
-    401
-    402	0369			     drawFrame	 proc
-    403	0369  83 E9 02			 sub cx, 2
-    404	036C  83 EA 02			 sub dx, 2 ; Для корректной работы не учитываю края	    +
-    405				     рамки
+    400	0365  83 C6 02			     add si, 2		; Перешёл на следующее значение
+    401	0368  81 C7 0140		     add di, 2 * 80 * 2	; Перепрыгнул через строку
+    402	036C  E2 F0			     loop @@DrawOneValue
+    403
+    404	036E  C3			 ret
+    405	036F				 endp
     406
-    407	036F  E8 001B			 call drawLine ; Рисую первую линию рамки
-    408
-    409	0372				 DrawMiddle:
-    410	0372  81 C7 00A0		     add di, 80	* 2 ; Делаю отступ
-    411	0376  E8 0014			     call drawLine  ; Рисую линию
-    412	0379  83 EE 03			     sub si, 3	    ; Возвращаю указатель на 4 символ	рамки
-    413
-    414	037C  4A			     dec dx
-    415	037D  83 FA 00			     cmp dx, 0
-    416	0380  75 F0			     jne DrawMiddle
+    407				     ;-----------------------------------------------------------------------------------------------
+    408				     ------
+    409				     ; Конвертирует	значение регистра si в	символы		    +
+    410				     определённого	цвета и записывает по	адресу es:[di]
+    411				     ; Entry: es:[di] -	адрес памяти	куда записать результат
+    412				     ;	      ds:[si] -	значение, которое нужно конвертировать
+    413				     ; Exit : None
+    414				     ; Destr: di, ax, cx
+    415				     ;-----------------------------------------------------------------------------------------------
+    416				     ------
     417
-    418	0382  81 C7 00A0		 add di, 80 * 2	; Отступаю до	начала следующей	линии
-    419	0386  83 C6 03			 add si, 3	; Ставлю указатель на 7 символ рамки
-    420	0389  E8 0001			 call drawLine	; Рисую последнюю	линию
-    421
-    422	038C  C3			 ret
-    423	038D				 endp
-    424
-    425				     ;-----------------------------------------------------------------------------------------------
-    426				     ------
-    427				     ; Рисует строку из символов (первый, последний и	    +
-    428				     промежуточные), с заданной длинной, цветом и		    +
-    429				     отступом
-    430				     ; Entry: ds:si - адрес в памяти строки с рамкой
-    431				     ;		 ah - цвет рамки
-    432				     ;		 di - смещение
-    433				     ;		 cx - ширина внутренней	части рамки
-    434				     ; Exit : None
-    435				     ; Destr: al, bx, si, es
-    436				     ;-----------------------------------------------------------------------------------------------
-    437				     ------
-    438
-    439	038D			     drawLine	 proc
-    440	038D  51			 push cx
-    441	038E  57			 push di
-    442	038F  BB B800			 mov bx, VIDEOSEG
-    443	0392  8E C3			 mov es, bx ; Установил адрес сегмента видеопамяти
-    444
-    445	0394  AC			 lodsb	   ; Загрузил в al первый символ рамки
-    446	0395  AB			 stosw	   ; В	видеопамять положил значение из ax
-    447
-    448	0396  AC			 lodsb	   ; Загрузил в al второй символ рамки
-    449	0397  F3> AB			 rep stosw ; В	видеопамять cx символов из	ax
-    450
-    451	0399  AC			 lodsb	   ; Загрузил в al последний символ рамки
-    452	039A  AB			 stosw	   ; В	видеопамять положил значение из ax
-    453
-    454	039B  5F			 pop di
-    455	039C  59			 pop cx
-    456	039D  C3			 ret
-Turbo Assembler	 Version 4.1	    03/03/25 14:55:46	    Page 9
+    418	036F			     conversionOneNumber proc
+    419	036F  33 C9			 xor cx, cx ; Почистил значения
+    420
+    421	0371				 OneSymbol:
+    422	0371  8B 04			     mov ax, [si] ; Переложил в ax значение для конвертации
+    423	0373  D3 E0			     shl ax, cl
+    424	0375  D1 E8 D1 E8 D1 E8	D1+	     shr ax, 12	  ; Двумя командами оставил только один	    +
+    425	      E8 D1 E8 D1 E8 D1	E8+  байт для конвертации его в ASCII-код
+    426	      D1 E8 D1 E8 D1 E8	D1+
+    427	      E8 D1 E8
+    428	038D  3D 0009			     cmp ax, 9	  ; Сравнил с 9, если меньше или равно, то 0-9, +
+    429				     если больше, то a-f
+    430	0390  76 0A			     jbe DecimalNumber
+    431	0392  77 00			     ja	HexadecimalNumber
+    432
+    433	0394				 HexadecimalNumber:
+    434	0394  04 37			     add al, 'A' - 0ah	 ; Превратил в ASCII-код
+    435	0396  B4 02			     mov ah, FRAME_COLOR ; Указал	нужный цвет
+    436	0398  AB			     stosw		 ; Положил в память
+    437	0399  EB 09 90			     jmp NextSymbol	 ; Прыгаю	на проверку на следующий	    +
+    438				     цикл
+    439
+    440	039C				 DecimalNumber:
+    441	039C  04 30			     add al, '0'	 ; Превратил в ASCII-код
+    442	039E  B4 02			     mov ah, FRAME_COLOR ; Указал	нужный цвет
+    443	03A0  AB			     stosw		 ; Положил в память
+    444	03A1  EB 01 90			     jmp NextSymbol	 ; Прыгаю	на проверку на следующий	    +
+    445				     цикл
+    446
+    447	03A4				 NextSymbol:
+    448	03A4  80 C1 04			     add cl, 4	; Увеличиваю счётчик
+    449	03A7  80 F9 10			     cmp cl, 16	; Проверяю условие выхода
+    450	03AA  75 C5			     jne OneSymbol
+    451
+    452	03AC  C3			 ret
+    453	03AD				 endp
+    454
+    455				     ;-----------------------------------------------------------------------------------------------
+    456				     ------
+Turbo Assembler	 Version 4.1	    03/05/25 20:01:53	    Page 9
 resident.asm
 
 
 
-    457	039E				 endp
-    458
-    459
-    460	039E			     EOP:
-    461
-    462	039E			     main:
-    463	039E  33 C0			 xor ax, ax
-    464	03A0  8E C0			 mov es, ax
-    465	03A2  BB 0024			 mov bx, 09h * 4
-    466
-    467	03A5  26: 8B 07			 mov ax, es:[bx]
-    468	03A8  A3 027Dr			 mov Old090fs, ax
-    469	03AB  26: 8B 47	02		 mov ax, es:[bx	+ 2]
-    470	03AF  A3 027Fr			 mov Old09Seg, ax
-    471
-    472	03B2  FA			 cli
-    473	03B3  26: C7 07	0226r		 mov es:[bx], offset new09
-    474	03B8  0E			 push cs
-    475	03B9  58			 pop ax
-    476	03BA  26: 89 47	02		 mov es:[bx + 2], ax
-    477	03BE  FB			 sti
-    478
-    479	03BF  B8 3100			 mov ax, 3100h
-    480	03C2  BA 039Er			 mov dx, offset	EOP
-    481	03C5  D1 EA D1 EA D1 EA	D1+	 shr dx, 4
-    482	      EA
-    483	03CD  42			 inc dx
-    484
-    485	03CE  CD 21			 int 21h
-    486
-    487				     end Start
-Turbo Assembler	 Version 4.1	    03/03/25 14:55:46	    Page 10
+    457				     ; Рисует рамку фиксированного размера и цвета
+    458				     ; Entry: ds:si - адрес строки с символами рамки
+    459				     ;		 cx - ширина рамки
+    460				     ;		 dx - высота рамки
+    461				     ;		 ah - цвет рамки
+    462				     ;		 di - смещение до первого символа рамки
+    463				     ; Exit : None
+    464				     ; Destr: al, bx, si, es, di, dx
+    465				     ;-----------------------------------------------------------------------------------------------
+    466				     ------
+    467
+    468	03AD			     drawFrame	 proc
+    469	03AD  83 E9 02			 sub cx, 2
+    470	03B0  83 EA 02			 sub dx, 2 ; Для корректной работы не учитываю края	    +
+    471				     рамки
+    472
+    473	03B3  E8 001B			 call drawLine ; Рисую первую линию рамки
+    474
+    475	03B6				 DrawMiddle:
+    476	03B6  81 C7 00A0		     add di, 80	* 2 ; Делаю отступ
+    477	03BA  E8 0014			     call drawLine  ; Рисую линию
+    478	03BD  83 EE 03			     sub si, 3	    ; Возвращаю указатель на 4 символ	рамки
+    479
+    480	03C0  4A			     dec dx
+    481	03C1  83 FA 00			     cmp dx, 0
+    482	03C4  75 F0			     jne DrawMiddle
+    483
+    484	03C6  81 C7 00A0		 add di, 80 * 2	; Отступаю до	начала следующей	линии
+    485	03CA  83 C6 03			 add si, 3	; Ставлю указатель на 7 символ рамки
+    486	03CD  E8 0001			 call drawLine	; Рисую последнюю	линию
+    487
+    488	03D0  C3			 ret
+    489	03D1				 endp
+    490
+    491				     ;-----------------------------------------------------------------------------------------------
+    492				     ------
+    493				     ; Рисует строку из символов (первый, последний и	    +
+    494				     промежуточные), с заданной длинной, цветом и		    +
+    495				     отступом
+    496				     ; Entry: ds:si - адрес в памяти строки с рамкой
+    497				     ;		 ah - цвет рамки
+    498				     ;		 di - смещение
+    499				     ;		 cx - ширина внутренней	части рамки
+    500				     ; Exit : None
+    501				     ; Destr: al, bx, si, es
+    502				     ;-----------------------------------------------------------------------------------------------
+    503				     ------
+    504
+    505	03D1			     drawLine	 proc
+    506	03D1  51			 push cx
+    507	03D2  57			 push di
+    508	03D3  BB B800			 mov bx, VIDEOSEG
+    509	03D6  8E C3			 mov es, bx ; Установил адрес сегмента видеопамяти
+    510
+    511	03D8  AC			 lodsb	   ; Загрузил в al первый символ рамки
+    512	03D9  AB			 stosw	   ; В	видеопамять положил значение из ax
+    513
+Turbo Assembler	 Version 4.1	    03/05/25 20:01:53	    Page 10
+resident.asm
+
+
+
+    514	03DA  AC			 lodsb	   ; Загрузил в al второй символ рамки
+    515	03DB  F3> AB			 rep stosw ; В	видеопамять cx символов из	ax
+    516
+    517	03DD  AC			 lodsb	   ; Загрузил в al последний символ рамки
+    518	03DE  AB			 stosw	   ; В	видеопамять положил значение из ax
+    519
+    520	03DF  5F			 pop di
+    521	03E0  59			 pop cx
+    522	03E1  C3			 ret
+    523	03E2				 endp
+    524
+    525
+    526	03E2			     EOP:
+    527
+    528	03E2			     main:
+    529	03E2  33 C0			 xor ax, ax
+    530	03E4  8E C0			 mov es, ax
+    531	03E6  BB 0024			 mov bx, 09h * 4
+    532	03E9  BF 0020			 mov di, 08h * 4
+    533
+    534	03EC  26: 8B 07			 mov ax, es:[bx]
+    535	03EF  A3 0289r			 mov Old090fs, ax
+    536	03F2  26: 8B 47	02		 mov ax, es:[bx	+ 2]
+    537	03F6  A3 028Br			 mov Old09Seg, ax
+    538
+    539	03F9  26: 8B 05			 mov ax, es:[di]
+    540	03FC  A3 02C5r			 mov Old080fs, ax
+    541	03FF  26: 8B 45	02		 mov ax, es:[di	+ 2]
+    542	0403  A3 02C7r			 mov Old08Seg, ax
+    543
+    544	0406  FA			 cli
+    545	0407  0E			 push cs
+    546	0408  58			 pop ax
+    547	0409  26: C7 07	0226r		 mov es:[bx], offset new09
+    548	040E  26: 89 47	02		 mov es:[bx + 2], ax
+    549
+    550	0412  26: C7 05	028Er		 mov es:[di], offset new08
+    551	0417  26: 89 45	02		 mov es:[di + 2], ax
+    552	041B  FB			 sti
+    553
+    554	041C  B8 3100			 mov ax, 3100h
+    555	041F  BA 03E2r			 mov dx, offset	EOP
+    556	0422  D1 EA D1 EA D1 EA	D1+	 shr dx, 4
+    557	      EA
+    558	042A  42			 inc dx
+    559
+    560	042B  CD 21			 int 21h
+    561
+    562				     end Start
+Turbo Assembler	 Version 4.1	    03/05/25 20:01:53	    Page 11
 Symbol Table
 
 
@@ -538,14 +618,18 @@ Symbol Table
 
 Symbol Name			  Type	 Value
 
-??DATE				  Text	 "03/03/25"
+??DATE				  Text	 "03/05/25"
 ??FILENAME			  Text	 "resident"
-??TIME				  Text	 "14:55:46"
+??TIME				  Text	 "20:01:53"
 ??VERSION			  Number 040A
 @32BIT				  Text	 0
-@@DRAWONELINE			  Near	 DGROUP:0296
-@@DRAWONEREG			  Near	 DGROUP:02FD
-@@DRAWONEVALUE			  Near	 DGROUP:031A
+@@DRAWONELINE			  Near	 DGROUP:02DD
+@@DRAWONEREG			  Near	 DGROUP:0341
+@@DRAWONEVALUE			  Near	 DGROUP:035E
+@@OFF				  Near	 DGROUP:0252
+@@ON				  Near	 DGROUP:0267
+@@SKIP				  Near	 DGROUP:027C
+@@SKIP				  Near	 DGROUP:02B8
 @CODE				  Text	 DGROUP
 @CODESIZE			  Text	 0
 @CPU				  Text	 0101H
@@ -557,43 +641,44 @@ Symbol Name			  Type	 Value
 @MODEL				  Text	 1
 @STACK				  Text	 DGROUP
 @WORDSIZE			  Text	 2
-ACTIVE				  Byte	 DGROUP:0281
+ACTIVE				  Byte	 DGROUP:028D
 BIAS_FRAME			  Number 0370
 BUFFER_DISPLAY_SYMBOLS		  Near	 DGROUP:011C
 BUFFER_REGISTERS		  Near	 DGROUP:0206
-CONVERSIONONENUMBER		  Near	 DGROUP:032B
-DECIMALNUMBER			  Near	 DGROUP:0358
-DRAWFRAME			  Near	 DGROUP:0369
-DRAWLINE			  Near	 DGROUP:038D
-DRAWMIDDLE			  Near	 DGROUP:0372
-DRAWTITLE			  Near	 DGROUP:02E6
-EOP				  Near	 DGROUP:039E
-FRAMEOFF			  Near	 DGROUP:0282
-FRAMEON				  Near	 DGROUP:02A7
+CONVERSIONONENUMBER		  Near	 DGROUP:036F
+DECIMALNUMBER			  Near	 DGROUP:039C
+DRAWFRAME			  Near	 DGROUP:03AD
+DRAWLINE			  Near	 DGROUP:03D1
+DRAWMIDDLE			  Near	 DGROUP:03B6
+DRAWTITLE			  Near	 DGROUP:032A
+EOP				  Near	 DGROUP:03E2
+FRAMEON				  Near	 DGROUP:02EE
 FRAME_COLOR			  Number 0002
 FRAME_HEIGHT			  Number 0009
 FRAME_WIDTH			  Number 000D
-HEXADECIMALNUMBER		  Near	 DGROUP:0350
-MAIN				  Near	 DGROUP:039E
+HEXADECIMALNUMBER		  Near	 DGROUP:0394
+MAIN				  Near	 DGROUP:03E2
+NEW08				  Near	 DGROUP:028E
 NEW09				  Near	 DGROUP:0226
-NEXTSYMBOL			  Near	 DGROUP:0360
+NEXTSYMBOL			  Near	 DGROUP:03A4
 NUMBER_OF_REGISTERS		  Number 0004
-OLD090FS			  Word	 DGROUP:027D
-OLD09SEG			  Word	 DGROUP:027F
-ON				  Near	 DGROUP:0266
-ONESYMBOL			  Near	 DGROUP:032D
+OLD080FS			  Word	 DGROUP:02C5
+OLD08SEG			  Word	 DGROUP:02C7
+OLD090FS			  Word	 DGROUP:0289
+OLD09SEG			  Word	 DGROUP:028B
+ONESYMBOL			  Near	 DGROUP:0371
 RAMKA				  Byte	 DGROUP:0113
+RECOVERDISPLAY			  Near	 DGROUP:02C9
 REGISTERS			  Byte	 DGROUP:0103
-SAVEDISPLAY			  Near	 DGROUP:02C2
-SAVEONELINE			  Near	 DGROUP:02D5
-SKIP				  Near	 DGROUP:0270
-START				  Near	 DGROUP:0100
-VIDEOSEG			  Number B800
-Turbo Assembler	 Version 4.1	    03/03/25 14:55:46	    Page 11
+SAVEDISPLAY			  Near	 DGROUP:0306
+SAVEONELINE			  Near	 DGROUP:0319
+Turbo Assembler	 Version 4.1	    03/05/25 20:01:53	    Page 12
 Symbol Table
 
 
 
+START				  Near	 DGROUP:0100
+VIDEOSEG			  Number B800
 
 Macro Name
 
@@ -605,5 +690,5 @@ Groups & Segments		  Bit Size Align  Combine Class
 
 DGROUP				  Group
   _DATA				  16  0000 Word	  Public  DATA
-  _TEXT				  16  03D0 Word	  Public  CODE
+  _TEXT				  16  042D Word	  Public  CODE
 
